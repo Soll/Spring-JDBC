@@ -12,7 +12,10 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import javax.sql.DataSource;
 import java.sql.ResultSet;
@@ -33,21 +36,30 @@ public class SQLiteDAO implements MP3Dao {
         this.jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
     }
 
-    @Transactional
-    public int insert(MP3 mp3) {
+    @Transactional(propagation = Propagation.MANDATORY)
+    public int insertAuthor(Author author) {
+
+        System.out.println(TransactionSynchronizationManager.isActualTransactionActive());
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
 
         String sqlAuthor = "insert into author (name) values (:name)";
-        Author author = mp3.getAuthor();
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("name", author.getName());
         jdbcTemplate.update(sqlAuthor, params, keyHolder);
 
-        int author_id = keyHolder.getKey().intValue();
+        return keyHolder.getKey().intValue();
+    }
+
+    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.READ_COMMITTED)
+    public int insertMP3(MP3 mp3) {
+
+        System.out.println(TransactionSynchronizationManager.isActualTransactionActive());
+
+        int author_id = insertAuthor(mp3.getAuthor());
 
         String sqlMP3 = "insert into mp3 (name, author_id) values (:name, :author_id)";
-        params = new MapSqlParameterSource();
+        MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("name", mp3.getName());
         params.addValue("author_id", author_id);
 
@@ -60,7 +72,7 @@ public class SQLiteDAO implements MP3Dao {
         int i = 0;
 
         for (MP3 mp3 : mp3List) {
-            insert(mp3);
+            insertMP3(mp3);
             i++;
         }
 

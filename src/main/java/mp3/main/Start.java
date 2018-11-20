@@ -13,16 +13,16 @@ public class Start {
     public static void main(String[] args) {
 
         Author author = new Author();
-        author.setName("Rammstein");
+        author.setName("Justin");
 
         MP3 mp3 = new MP3();
-        mp3.setName("Song 123");
+        mp3.setName("Song #5");
         mp3.setAuthor(author);
 
 
         ApplicationContext context = new ClassPathXmlApplicationContext("context.xml");
         SQLiteDAO sqLiteDAO = (SQLiteDAO) context.getBean("sqliteDAO");
-       // sqLiteDAO.insert(mp3);
+        sqLiteDAO.insertMP3(mp3);
 
         Map<String, Integer> map = sqLiteDAO.getStat();
         map.forEach((k, v) -> System.out.println(k + " - " + v));
