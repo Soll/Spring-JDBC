@@ -12,9 +12,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import javax.sql.DataSource;
@@ -36,25 +33,7 @@ public class SQLiteDAO implements MP3Dao {
         this.jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
     }
 
-    @Transactional(propagation = Propagation.MANDATORY)
-    public int insertAuthor(Author author) {
-
-        System.out.println(TransactionSynchronizationManager.isActualTransactionActive());
-
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-
-        String sqlAuthor = "insert into author (name) values (:name)";
-        MapSqlParameterSource params = new MapSqlParameterSource();
-        params.addValue("name", author.getName());
-        jdbcTemplate.update(sqlAuthor, params, keyHolder);
-
-        return keyHolder.getKey().intValue();
-    }
-
-    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.READ_COMMITTED)
     public int insertMP3(MP3 mp3) {
-
-        System.out.println(TransactionSynchronizationManager.isActualTransactionActive());
 
         int author_id = insertAuthor(mp3.getAuthor());
 
@@ -65,6 +44,18 @@ public class SQLiteDAO implements MP3Dao {
 
         return jdbcTemplate.update(sqlMP3, params);
 
+    }
+
+    public int insertAuthor(Author author) {
+
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+
+        String sqlAuthor = "insert into author (name) values (:name)";
+        MapSqlParameterSource params = new MapSqlParameterSource();
+        params.addValue("name", author.getName());
+        jdbcTemplate.update(sqlAuthor, params, keyHolder);
+
+        return keyHolder.getKey().intValue();
     }
 
     public int insertList(List<MP3> mp3List) {
